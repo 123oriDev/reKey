@@ -30,9 +30,6 @@ def record_input():
 
     return typed_string
 
-def deleteKey():
-
-
 def main():
     welcome()
 
