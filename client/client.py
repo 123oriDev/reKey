@@ -37,7 +37,7 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_soc:
             server_soc.connect((SERVER_IP, SERVER_PORT))
             choice = '-1'
-            print(record_input())
+            
 
             while choice != '0':
                 menu()
@@ -61,3 +61,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    unesessry
