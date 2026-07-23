@@ -5,21 +5,26 @@ PORT = 849  # ascii sum keyboard
 
 
 def main():
-    print("Code here")
+    print("Server is running")
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("", PORT))
         sock.listen(1)
 
-        client_soc, addr = sock.accept()
+        while True:
+            try:
+                client_soc, addr = sock.accept()
+                print(f"{addr} connected")
 
-        with client_soc:
-            server_message = ""
+                with client_soc:
+                    server_message = ""
 
-            while server_message != 'code:"300",data:""':
-                client_message = client_soc.recv(512).decode()
-                server_message = process.process_message(client_message)
-                client_soc.sendall(server_message.encode())
+                    while server_message != 'code:"300",data:""':
+                        client_message = client_soc.recv(512).decode()
+                        server_message = process.process_message(client_message)
+                        client_soc.sendall(server_message.encode())
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

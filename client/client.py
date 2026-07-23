@@ -51,6 +51,7 @@ def main():
 
                 else:
                     print("No match found")
+                    continue
 
                 server_soc.sendall(client_message.encode())
                 server_message = server_soc.recv(512).decode()
