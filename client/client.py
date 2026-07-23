@@ -52,7 +52,7 @@ def main():
                 elif choice == '2':
                     client_message = util.generate_message(100, input("Enter a key"))
                 elif choice == '3':
-                    client_message = util.generate_message(100, 'delete')
+                    client_message = util.generate_message(100, 'backspace')
                 else:
                     print("No match found")
                     continue
