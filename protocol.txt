@@ -1,0 +1,37 @@
+client -> server:
+    code:"<code>",data:"<data optional>
+
+    codes:
+        100 - key send:
+            example:
+                code:"100",data:"space"
+
+        150 - file text write:
+            example:
+                code:"150",data:"hello"
+
+        300 - file keys:
+            example:
+                code:"300",data:"file"
+        
+        900 - logout:
+            example:
+                code:"900",data:""
+
+
+
+server -> client:
+    code:"<code>",data:"<data optional>"
+
+    codes:
+        100 - okay:
+            example:
+                code:"100",data:""
+        
+        300 - file keys:
+            example:
+                code:"300",data:"data.txt"
+
+        500 - error:
+            example:
+                code:"500",data:"invalid key/message"
