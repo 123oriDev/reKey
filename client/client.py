@@ -19,6 +19,8 @@ def menu():
     print("[0] Quit")
     print("[1] Record keys")
     print("[2] Enter a key")
+    print("[3] Delete")
+
 
 def record_input():
     print("Recording. Press Esc to stop.")
@@ -27,6 +29,8 @@ def record_input():
     typed_string = list(keyboard.get_typed_strings(events))[0]
 
     return typed_string
+
+def deleteKey():
 
 
 def main():
@@ -48,7 +52,10 @@ def main():
 
                 elif choice == '1':
                     client_message = util.generate_message(150, record_input())
-
+                elif choice == '2':
+                    client_message = util.generate_message(100, input("Enter a key"))
+                elif choice == '3':
+                    client_message = util.generate_message(100, 'delete')
                 else:
                     print("No match found")
                     continue
