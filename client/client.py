@@ -43,10 +43,10 @@ def main():
                 menu()
                 choice = input("Enter your choice: ")
 
-                if choice == 0:
+                if choice == '0':
                     client_message = util.generate_message(900)
 
-                elif choice == 1:
+                elif choice == '1':
                     client_message = util.generate_message(150, record_input())
 
                 else:
