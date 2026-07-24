@@ -60,18 +60,23 @@ def record_input():
     return typed_string
 
 def on_key(event_or_tag, server_soc):
-    """
-    listens to a key and sends it to the server
+    """Listens to a key or hotkey tag and sends it to the server.
+
     :param event_or_tag: the key that was pressed
     :param server_soc: the socket to the server
-    :type event_or_tag: KeyboardEvent, KeyboardTag
+    :type event_or_tag: KeyboardEvent, str
     :type server_soc: socket
     :return: None
     :rtype: None
     """
     if hasattr(event_or_tag, "name"):
-        # Skip sending raw 'v' or 'ctrl' if Ctrl is currently held down
-        if keyboard.is_pressed("ctrl") and event_or_tag.name in ["ctrl", "v"]:
+        # Skip raw key events for ctrl, v, c, or z if Ctrl is held down
+        if keyboard.is_pressed("ctrl") and event_or_tag.name in [
+            "ctrl",
+            "v",
+            "c",
+            "z",
+        ]:
             return
 
         key_name = event_or_tag.name
@@ -82,19 +87,21 @@ def on_key(event_or_tag, server_soc):
     print(f"Key pressed: {key_name}")
     send_message(client_message, server_soc)
 
+
 def record_Keys(server_soc):
-    """
-    listens for keys and send each key individually to the sever
+    """Listens for keys and sends each key individually or hotkey to the server.
+
     :param server_soc: the socket to the server
     :type server_soc: socket
     :return: None
     :rtype: None
     """
-    # Special hotkey trigger
+    # Hotkey triggers
     keyboard.add_hotkey("ctrl+v", on_key, args=("ctrl+v", server_soc))
+    keyboard.add_hotkey("ctrl+c", on_key, args=("ctrl+c", server_soc))
+    keyboard.add_hotkey("ctrl+z", on_key, args=("ctrl+z", server_soc))
 
     # General key listener
-    # The lambda receives `e` (event) from keyboard and passes both `e` and `my_custom_value`
     keyboard.on_press(lambda e: on_key(e, server_soc))
 
     print("Listening for key presses... Press ESC to quit.")
