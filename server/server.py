@@ -14,7 +14,7 @@ def main():
         while True:
             try:
                 client_soc, addr = sock.accept()
-                print(f"{addr} connected")
+                print(f"{addr} Connected")
 
                 with client_soc:
                     server_message = ""
@@ -24,6 +24,7 @@ def main():
                         server_message = process.process_message(client_message)
                         client_soc.sendall(server_message.encode())
             except Exception:
+                print(f"{addr} Disconnected")
                 pass
 
 
