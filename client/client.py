@@ -31,6 +31,20 @@ def menu():
     print("[2] Record input")
     print("[3] Delete")
 
+def send_message(client_message, server_soc):
+    """
+    sends a message to the server (send and receive)
+    :param client_message: the message to send
+    :param server_soc: the socket to the server
+    :type code: string
+    :type server_soc: socket
+    :return: None
+    :rtype: None
+    """
+    server_soc.sendall(client_message.encode())
+    server_message = server_soc.recv(512).decode()
+    server_message = util.decode_message(server_message)
+    print(server_message[1])
 
 def record_input():
     """
@@ -51,23 +65,20 @@ def on_key(event, server_soc):
     :param event: the key that was pressed
     :param server_soc: the socket to the server
     :type code: KeyboardEvent
-    :type server_soc: socket.socket
+    :type server_soc: socket
     :return: None
     :rtype: None
     """
     client_message = util.generate_message(100, event.name)
     print(f"Key pressed: {event.name}")
 
-    server_soc.sendall(client_message.encode())
-    server_message = server_soc.recv(512).decode()
-    server_message = util.decode_message(server_message)
-    print(server_message[1])
+    send_message(client_message, server_soc)
 
 def record_Keys(server_soc):
     """
     listens for keys and send each key individually to the sever
     :param server_soc: the socket to the server
-    :type server_soc: socket.socket
+    :type server_soc: socket
     :return: None
     :rtype: None
     """
@@ -102,14 +113,10 @@ def main():
                     client_message = util.generate_message(150, record_input())
                 elif choice == '3':
                     client_message = util.generate_message(100, 'backspace')
+                    send_message(client_message, server_soc)
                 else:
                     print("No match found")
                     continue
-
-                server_soc.sendall(client_message.encode())
-                server_message = server_soc.recv(512).decode()
-                server_message = util.decode_message(server_message)
-                print(server_message[1])
     
 
 if __name__ == "__main__":
