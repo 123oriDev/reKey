@@ -15,10 +15,12 @@ class SocketHandler(cli_client_util.BaseKeyHandler):
 
     def on_press(self, key: str) -> None:
         client_message = util.generate_message(200, record_input())
+        print(client_message)
         send_message(client_message, self._sock)
 
     def on_release(self, key: str) -> None:
         client_message = util.generate_message(250, record_input())
+        print(client_message)
         send_message(client_message, self._sock)
 
 def welcome():
@@ -95,7 +97,7 @@ def record_Keys(server_soc):
         handler=my_handler,
         exit_combo={"ctrl", "shift", "alt", "q"}
     )
-    
+
     interceptor.start()
     
 
