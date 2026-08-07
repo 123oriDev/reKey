@@ -1,9 +1,12 @@
-import keyboard # pyright: ignore[reportMissingModuleSource]
 import socket
+
+import cli_client_util
+import keyboard  # pyright: ignore[reportMissingModuleSource]
 import util
 
-SERVER_IP = ''
+SERVER_IP = ""
 SERVER_PORT = 849  # ascii sum keyboard
+
 
 def welcome():
     """
@@ -20,6 +23,7 @@ def welcome():
                                                                                |___/                                                                                                                                             
     """)
 
+
 def menu():
     """
     prints the menu to the user
@@ -30,6 +34,7 @@ def menu():
     print("[1] Record keys")
     print("[2] Record input")
     print("[3] Delete")
+
 
 def send_message(client_message, server_soc):
     """
@@ -46,6 +51,7 @@ def send_message(client_message, server_soc):
     server_message = util.decode_message(server_message)
     print(server_message[1])
 
+
 def record_input():
     """
     prints a welcome text to the user
@@ -59,34 +65,14 @@ def record_input():
 
     return typed_string
 
-def on_key(event_or_tag, server_soc):
-    """Listens to a key or hotkey tag and sends it to the server.
+def handle_press(key: str) -> None:
+    """Callback function executed on a key press."""
+    print(f"-> Pressed key: {key}")
 
-    :param event_or_tag: the key that was pressed
-    :param server_soc: the socket to the server
-    :type event_or_tag: KeyboardEvent, str
-    :type server_soc: socket
-    :return: None
-    :rtype: None
-    """
-    if hasattr(event_or_tag, "name"):
-        # Skip raw key events for ctrl, v, c, or z if Ctrl is held down
-        if keyboard.is_pressed("ctrl") and event_or_tag.name in [
-            "ctrl",
-            "v",
-            "c",
-            "z",
-        ]:
-            return
 
-        key_name = event_or_tag.name
-    else:
-        key_name = event_or_tag
-
-    client_message = util.generate_message(100, key_name)
-    print(f"Key pressed: {key_name}")
-    send_message(client_message, server_soc)
-
+def handle_release(key: str) -> None:
+    """Callback function executed on a key release."""
+    print(f"<- Released key: {key}")
 
 def record_Keys(server_soc):
     """Listens for keys and sends each key individually or hotkey to the server.
@@ -96,18 +82,13 @@ def record_Keys(server_soc):
     :return: None
     :rtype: None
     """
-    # Hotkey triggers
-    keyboard.add_hotkey("ctrl+v", on_key, args=("ctrl+v", server_soc))
-    keyboard.add_hotkey("ctrl+c", on_key, args=("ctrl+c", server_soc))
-    keyboard.add_hotkey("ctrl+z", on_key, args=("ctrl+z", server_soc))
-
-    # General key listener
-    keyboard.on_press(lambda e: on_key(e, server_soc))
-
-    print("Listening for key presses... Press ESC to quit.")
-    keyboard.wait("esc")
-
+    cli_client_util.check_privileges()
     
+    interceptor = cli_client_util.KeyboardInterceptor(on_press=handle_press, on_release=handle_release)
+    
+    interceptor.start()
+    
+
 
 def main():
     welcome()
@@ -115,28 +96,27 @@ def main():
     SERVER_IP = input("Enter machine ip: ")
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_soc:
-            server_soc.connect((SERVER_IP, SERVER_PORT))
-            choice = '-1'
-            
+        server_soc.connect((SERVER_IP, SERVER_PORT))
+        choice = "-1"
 
-            while choice != '0':
-                menu()
-                choice = input("Enter your choice: ")
+        while choice != "0":
+            menu()
+            choice = input("Enter your choice: ")
 
-                if choice == '0':
-                    client_message = util.generate_message(900)
+            if choice == "0":
+                client_message = util.generate_message(900)
 
-                elif choice == '1':
-                    record_Keys(server_soc)
-                elif choice == '2':
-                    client_message = util.generate_message(150, record_input())
-                elif choice == '3':
-                    client_message = util.generate_message(100, 'backspace')
-                    send_message(client_message, server_soc)
-                else:
-                    print("No match found")
-                    continue
-    
+            elif choice == "1":
+                record_Keys(server_soc)
+            elif choice == "2":
+                client_message = util.generate_message(150, record_input())
+            elif choice == "3":
+                client_message = util.generate_message(100, "backspace")
+                send_message(client_message, server_soc)
+            else:
+                print("No match found")
+                continue
+
 
 if __name__ == "__main__":
     main()

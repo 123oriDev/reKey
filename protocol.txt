@@ -10,6 +10,14 @@ client -> server:
             example:
                 code:"150",data:"hello"
 
+        200 - press(and not release(hold)) a key:
+            example:
+                code:"200",data:"space"
+
+        250 - release a key:
+            example:
+                code:"250",data:"space"
+
         300 - file keys:
             example:
                 code:"300",data:"file"
