@@ -3,6 +3,8 @@ import util
 
 CLIENT_KEY = "100"
 CLIENT_WRITE = "150"
+CLIENT_PRESS = "200"
+CLIENT_RELEASE = "250"
 CLIENT_LOGOUT = "900"
 
 def process_message(message):
@@ -27,6 +29,12 @@ def process_message(message):
 
         elif code_data[0] == CLIENT_WRITE:
             keyboard.write(code_data[1])
+        
+        elif code_data[0] == CLIENT_PRESS:
+            keyboard.press(code_data[1])
+
+        elif code_data[0] == CLIENT_RELEASE:
+            keyboard.release(code_data[1])
 
         elif code_data[0] == CLIENT_LOGOUT:
             pass

@@ -7,6 +7,19 @@ import util
 SERVER_IP = ""
 SERVER_PORT = 849  # ascii sum keyboard
 
+class SocketHandler(cli_client_util.BaseKeyHandler):
+    """An handler to send messages to the server"""
+    
+    def __init__(self, socket: socket.socket):
+        self._sock = socket
+
+    def on_press(self, key: str) -> None:
+        client_message = util.generate_message(200, record_input())
+        send_message(client_message, self._sock)
+
+    def on_release(self, key: str) -> None:
+        client_message = util.generate_message(250, record_input())
+        send_message(client_message, self._sock)
 
 def welcome():
     """
@@ -65,15 +78,6 @@ def record_input():
 
     return typed_string
 
-def handle_press(key: str) -> None:
-    """Callback function executed on a key press."""
-    print(f"-> Pressed key: {key}")
-
-
-def handle_release(key: str) -> None:
-    """Callback function executed on a key release."""
-    print(f"<- Released key: {key}")
-
 def record_Keys(server_soc):
     """Listens for keys and sends each key individually or hotkey to the server.
 
@@ -82,18 +86,28 @@ def record_Keys(server_soc):
     :return: None
     :rtype: None
     """
-    cli_client_util.check_privileges()
-    
-    interceptor = cli_client_util.KeyboardInterceptor(on_press=handle_press, on_release=handle_release)
+    my_handler = SocketHandler(
+        socket = server_soc
+    )
+
+    # 2. Pass the handler and a custom exit shortcut to the interceptor
+    interceptor = cli_client_util.KeyboardInterceptor(
+        handler=my_handler,
+        exit_combo={"ctrl", "shift", "alt", "q"}
+    )
     
     interceptor.start()
     
 
 
 def main():
+    cli_client_util.check_privileges()
+
     welcome()
 
     SERVER_IP = input("Enter machine ip: ")
+
+    
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_soc:
         server_soc.connect((SERVER_IP, SERVER_PORT))
