@@ -9,18 +9,16 @@ SERVER_PORT = 849  # ascii sum keyboard
 
 class SocketHandler(cli_client_util.BaseKeyHandler):
     """An handler to send messages to the server"""
-    
+
     def __init__(self, socket: socket.socket):
         self._sock = socket
 
     def on_press(self, key: str) -> None:
-        client_message = util.generate_message(200, record_input())
-        print(client_message)
+        client_message = util.generate_message(200, key)
         send_message(client_message, self._sock)
 
     def on_release(self, key: str) -> None:
-        client_message = util.generate_message(250, record_input())
-        print(client_message)
+        client_message = util.generate_message(250, key)
         send_message(client_message, self._sock)
 
 def welcome():
