@@ -1,109 +1,93 @@
-import os
-import platform
-import sys
-from collections.abc import Callable
-from threading import Event
+import threading
+import time
 
 import keyboard
+import util
+
+CLIENT_KEY = "100"
+CLIENT_WRITE = "150"
+CLIENT_PRESS = "200"
+CLIENT_RELEASE = "250"
+CLIENT_LOGOUT = "900"
+
+# --- NEW: Global set to track which keys are currently being held ---
+active_keys = set()
+
+def simulate_physical_hold(key):
+    """
+    Runs in the background. Simulates physical auto-repeat 
+    as long as the key remains in the active_keys set.
+    """
+    try:
+        keyboard.press(key) # Initial press
+        
+        # 1. Hardware pause (Wait 0.5s, but check constantly if it was released early)
+        start = time.time()
+        while time.time() - start < 0.5:
+            if key not in active_keys:
+                return # Key was released before auto-repeat started, stop thread
+            time.sleep(0.01)
+            
+        # 2. Auto-repeat spam loop
+        while key in active_keys:
+            keyboard.press(key)
+            time.sleep(0.03) # Standard physical keyboard repeat rate
+            
+    finally:
+        # 3. Always let go when the thread finishes or crashes
+        keyboard.release(key)
 
 
-def check_privileges() -> None:
-    """Ensure the process has root/admin access required for OS-level input hooks."""
-    is_win = platform.system() == "Windows"
-    if is_win:
-        import ctypes
+def process_message(message):
+    """
+    process the message(Enter the key) and generate a response
+    :param message: a client message in the protocol
+    :type message: str
+    :return: the response message
+    :rtype: string
+    """
+    try:
+        code_data = util.decode_message(message)
+        
+    except Exception as e:  # noqa: BLE001
+        return util.generate_message(900, e)
 
-        has_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    print(code_data)
+
+    try:
+        if code_data[0] == CLIENT_KEY:
+            keyboard.press_and_release(code_data[1])
+
+        elif code_data[0] == CLIENT_WRITE:
+            keyboard.write(code_data[1])
+        
+        elif code_data[0] == CLIENT_PRESS:
+            key = code_data[1]
+            if key not in active_keys:
+                active_keys.add(key) # Mark as active
+                # Start the background thread so we don't block the server
+                threading.Thread(target=simulate_physical_hold, args=(key,), daemon=True).start()
+
+        elif code_data[0] == CLIENT_RELEASE:
+            key = code_data[1]
+            active_keys.discard(key) # This tells the background thread to stop
+            keyboard.release(key)       # Failsafe release just in case
+
+        elif code_data[0] == CLIENT_LOGOUT:
+            pass
+            
+        else:
+            print("No match found")
+
+    except Exception:
+        return util.generate_message(900, "Invalid data input")
     else:
-        has_admin = os.geteuid() == 0
-
-    if not has_admin:
-        hint = "Run terminal as Administrator" if is_win else "sudo python3 script.py"
-        sys.exit(f"Error: Elevated privileges required.\nHint: {hint}")
+        return util.generate_message(100, "Success")
 
 
-class KeyboardInterceptor:
-    """Hooks, suppresses, and routes global keyboard events to custom press/release callbacks."""
-
-    def __init__(
-        self,
-        on_press: Callable[[str], None] | None = None,
-        on_release: Callable[[str], None] | None = None,
-    ):
-        self.on_press_callback = on_press
-        self.on_release_callback = on_release
-        self._pressed_keys = set()
-        self._stop_signal = Event()
-
-    def _on_key_event(self, event: keyboard.KeyboardEvent) -> None:
-        key_name = str(event.name).lower()
-
-        if event.event_type == keyboard.KEY_DOWN:
-            # 1. Deduplicate OS key-repeats and trigger press callback
-            if key_name not in self._pressed_keys:
-                self._pressed_keys.add(key_name)
-                if self.on_press_callback:
-                    self.on_press_callback(key_name)
-
-            # 2. Check for emergency exit shortcut: Ctrl + Shift + Alt + Q
-            has_ctrl = any("ctrl" in k for k in self._pressed_keys)
-            has_shift = any("shift" in k for k in self._pressed_keys)
-            has_alt = any("alt" in k for k in self._pressed_keys)
-            has_q = "q" in self._pressed_keys
-
-            if has_ctrl and has_shift and has_alt and has_q:
-                self._stop_signal.set()
-                return
-
-        elif event.event_type == keyboard.KEY_UP:
-            # Remove key from active set and trigger release callback
-            if key_name in self._pressed_keys:
-                self._pressed_keys.discard(key_name)
-                if self.on_release_callback:
-                    self.on_release_callback(key_name)
-
-    def _flush_remaining_releases(self) -> None:
-        """Trigger release callbacks for any keys that are still held when shutting down."""
-        for key_name in list(self._pressed_keys):
-            if self.on_release_callback:
-                self.on_release_callback(key_name)
-        self._pressed_keys.clear()
-
-    def start(self) -> None:
-        """Start global hook and block execution until exit combination is pressed."""
-        keyboard.hook(self._on_key_event, suppress=True)
-
-        print(f"Platform: {platform.system()}")
-        print("UNIVERSAL BLOCKER ACTIVE: All keyboard inputs suppressed.")
-        print("Press 'CTRL + SHIFT + ALT + Q' to exit and restore control.\n")
-
-        try:
-            self._stop_signal.wait()
-        finally:
-            # Fire release callbacks for held keys (ctrl, shift, alt, q, etc.) before unhooking
-            self._flush_remaining_releases()
-            keyboard.unhook_all()
-            print("\n[EXIT] 'CTRL + SHIFT + ALT + Q' detected. Keyboard restored.")
-
-
-def handle_press(key: str) -> None:
-    """Callback function executed on a key press."""
-    print(f"-> Pressed key: {key}")
-
-
-def handle_release(key: str) -> None:
-    """Callback function executed on a key release."""
-    print(f"<- Released key: {key}")
-
-
-def main() -> None:
-    """Main application entry point."""
-    check_privileges()
-
-    interceptor = KeyboardInterceptor(on_press=handle_press, on_release=handle_release)
-
-    interceptor.start()
-
+def main():
+    message = 'code:"150",data:"hello"'
+    print(process_message(message))
 
 if __name__ == "__main__":
     main()
