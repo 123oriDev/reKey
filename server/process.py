@@ -70,7 +70,7 @@ def process_message(message):
         elif code_data[0] == CLIENT_RELEASE:
             key = code_data[1]
             active_keys.discard(key) # This tells the background thread to stop
-            keyboard.release(key)       # Failsafe release just in case
+            
 
         elif code_data[0] == CLIENT_LOGOUT:
             pass
