@@ -1,93 +1,58 @@
-import threading
-import time
-
-import keyboard
-import util
-
-CLIENT_KEY = "100"
-CLIENT_WRITE = "150"
-CLIENT_PRESS = "200"
-CLIENT_RELEASE = "250"
-CLIENT_LOGOUT = "900"
-
-# --- NEW: Global set to track which keys are currently being held ---
-active_keys = set()
-
-def simulate_physical_hold(key):
-    """
-    Runs in the background. Simulates physical auto-repeat 
-    as long as the key remains in the active_keys set.
-    """
-    try:
-        keyboard.press(key) # Initial press
-        
-        # 1. Hardware pause (Wait 0.5s, but check constantly if it was released early)
-        start = time.time()
-        while time.time() - start < 0.5:
-            if key not in active_keys:
-                return # Key was released before auto-repeat started, stop thread
-            time.sleep(0.01)
-            
-        # 2. Auto-repeat spam loop
-        while key in active_keys:
-            keyboard.press(key)
-            time.sleep(0.03) # Standard physical keyboard repeat rate
-            
-    finally:
-        # 3. Always let go when the thread finishes or crashes
-        keyboard.release(key)
+import sys
+import tkinter as tk
+from tkinter import filedialog
 
 
-def process_message(message):
-    """
-    process the message(Enter the key) and generate a response
-    :param message: a client message in the protocol
-    :type message: str
-    :return: the response message
-    :rtype: string
-    """
-    try:
-        code_data = util.decode_message(message)
-        
-    except Exception as e:  # noqa: BLE001
-        return util.generate_message(900, e)
+def enable_high_dpi():
+    """Configures system High-DPI scaling for crisp text on all operating systems."""
+    if sys.platform == "win32":
+        # Windows: Explicitly request per-monitor DPI awareness via ctypes
+        try:
+            import ctypes
 
-    print(code_data)
-
-    try:
-        if code_data[0] == CLIENT_KEY:
-            keyboard.press_and_release(code_data[1])
-
-        elif code_data[0] == CLIENT_WRITE:
-            keyboard.write(code_data[1])
-        
-        elif code_data[0] == CLIENT_PRESS:
-            key = code_data[1]
-            if key not in active_keys:
-                active_keys.add(key) # Mark as active
-                # Start the background thread so we don't block the server
-                threading.Thread(target=simulate_physical_hold, args=(key,), daemon=True).start()
-
-        elif code_data[0] == CLIENT_RELEASE:
-            key = code_data[1]
-            active_keys.discard(key) # This tells the background thread to stop
-            keyboard.release(key)       # Failsafe release just in case
-
-        elif code_data[0] == CLIENT_LOGOUT:
-            pass
-            
-        else:
-            print("No match found")
-
-    except Exception:
-        return util.generate_message(900, "Invalid data input")
-    else:
-        return util.generate_message(100, "Success")
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            try:
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+    elif sys.platform == "darwin":
+        # macOS: Retina display scaling is handled natively by Cocoa / macOS
+        pass
+    elif sys.platform.startswith("linux"):
+        # Linux: X11/Wayland DEs handle DPI scaling automatically in Tk 8.6+
+        pass
 
 
-def main():
-    message = 'code:"150",data:"hello"'
-    print(process_message(message))
+def get_file_path(title="Select a File", filetypes=None):
+    """Opens a native, high-res file picker dialog and returns the selected path."""
+    enable_high_dpi()
 
+    root = tk.Tk()
+    root.withdraw()  # Hide the main Tkinter window
+
+    # Cross-platform fix: Ensure the dialog pops up on top of other windows
+    root.attributes("-topmost", True)
+
+    if filetypes is None:
+        filetypes = [("All files", "*.*")]
+
+    file_path = filedialog.askopenfilename(title=title, filetypes=filetypes)
+
+    # Clean up the Tk instance after selection
+    root.destroy()
+
+    return file_path
+
+
+# --- Usage Example ---
 if __name__ == "__main__":
-    main()
+    selected_file = get_file_path(
+        title="Select Script or Document",
+        filetypes=[("Python & Text Files", "*.py *.txt"), ("All Files", "*.*")],
+    )
+
+    if selected_file:
+        print(f"Selected file: {selected_file}")
+    else:
+        print("No file selected.")

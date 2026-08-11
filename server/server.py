@@ -1,4 +1,5 @@
 import socket
+
 import process
 
 PORT = 849  # ascii sum keyboard
@@ -23,9 +24,9 @@ def main():
                         client_message = client_soc.recv(512).decode()
                         server_message = process.process_message(client_message)
                         client_soc.sendall(server_message.encode())
-            except Exception:
+            except Exception as e:  # noqa: BLE001
                 print(f"{addr} Disconnected")
-                pass
+                print(e)
 
 
 if __name__ == "__main__":

@@ -1,13 +1,13 @@
 import socket
 
 import cli_client_util
-import keyboard  # pyright: ignore[reportMissingModuleSource]
 import util
 
 SERVER_IP = ""
 SERVER_PORT = 849  # ascii sum keyboard
 
-class SocketHandler(cli_client_util.BaseKeyHandler):
+
+class socket_handler(cli_client_util.BaseKeyHandler):
     """An handler to send messages to the server"""
 
     def __init__(self, socket: socket.socket):
@@ -20,6 +20,7 @@ class SocketHandler(cli_client_util.BaseKeyHandler):
     def on_release(self, key: str) -> None:
         client_message = util.generate_message(250, key)
         send_message(client_message, self._sock)
+
 
 def welcome():
     """
@@ -37,16 +38,27 @@ def welcome():
     """)
 
 
-def menu():
+def start_menu():
     """
-    prints the menu to the user
+    prints a menu to the user to ask if he wants to connect to a server or
+    create a key presses file
     return: None
     rtype: None
     """
     print("[0] Quit")
-    print("[1] Record keys")
-    print("[2] Record input")
-    print("[3] Delete")
+    print("[1] Connect to a server")
+    print("[2] Create a key presses file")
+
+
+def menu():
+    """
+    prints server the menu to the user
+    return: None
+    rtype: None
+    """
+    print("[0] Quit")
+    print("[1] Control the server")
+    print("[2] Create a key presses file")
 
 
 def send_message(client_message, server_soc):
@@ -65,19 +77,6 @@ def send_message(client_message, server_soc):
     print(server_message[1])
 
 
-def record_input():
-    """
-    prints a welcome text to the user
-    return: a string of what the user entered
-    rtype: string
-    """
-    print("Recording. Press Esc to stop.")
-    events = keyboard.record("esc")
-
-    typed_string = list(keyboard.get_typed_strings(events))[0]
-
-    return typed_string
-
 def record_Keys(server_soc):
     """Listens for keys and sends each key individually or hotkey to the server.
 
@@ -86,50 +85,97 @@ def record_Keys(server_soc):
     :return: None
     :rtype: None
     """
-    my_handler = SocketHandler(
-        socket = server_soc
-    )
+    handler = socket_handler(socket=server_soc)
 
     # 2. Pass the handler and a custom exit shortcut to the interceptor
     interceptor = cli_client_util.KeyboardInterceptor(
-        handler=my_handler,
+        handler=handler, 
         exit_combo={"ctrl", "shift", "alt", "q"}
     )
 
     interceptor.start()
-    
 
+
+class key_file_handler(cli_client_util.BaseKeyHandler):
+    """An handler to send messages to the server"""
+
+    def __init__(self, file_write):
+        self._file_write = file_write
+
+    def on_press(self, key: str) -> None:
+        self._file_write.write(f'press:"{key}"\n')
+
+    def on_release(self, key: str) -> None:
+        self._file_write.write(f'release:"{key}"\n')
+
+
+def create_key_file():
+    path = input("Enter a path: ")
+
+    with open(path, "w") as file_write:
+        handler = key_file_handler(file_write= file_write)
+
+        exit_combo = {"ctrl", "shift", "alt", "q"}
+        exit_combo_len = len(exit_combo)
+        interceptor = cli_client_util.KeyboardInterceptor(
+            handler=handler, 
+            exit_combo=exit_combo,
+            suppress=False
+        )
+
+        interceptor.start()
+
+    with open(path, "r") as file:
+            file_read = file.readlines()[:-(exit_combo_len) * 2]
+            file_read[-1] = file_read[-1].strip()
+            print(file_read)
+
+    with open(path, "w") as file_write:
+        file_write.writelines(file_read)
 
 def main():
     cli_client_util.check_privileges()
 
+
     welcome()
 
-    SERVER_IP = input("Enter machine ip: ")
-
     
+    
+    choice = -1
+
+    while choice != "1":
+        start_menu()
+        choice = input("Enter your choice: ")
+
+        if choice == "0":
+            return 0
+        elif choice == "1":
+            SERVER_IP = input("Enter machine ip: ")
+        elif choice == "2":
+            create_key_file()
+        else:
+            print("No match found")
+
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_soc:
         server_soc.connect((SERVER_IP, SERVER_PORT))
-        choice = "-1"
 
         while choice != "0":
             menu()
             choice = input("Enter your choice: ")
 
             if choice == "0":
-                client_message = util.generate_message(900)
+                client_message = util.generate_message(900, "")
+                send_message(client_message)
 
             elif choice == "1":
                 record_Keys(server_soc)
-            elif choice == "2":
-                client_message = util.generate_message(150, record_input())
-            elif choice == "3":
-                client_message = util.generate_message(100, "backspace")
-                send_message(client_message, server_soc)
             else:
                 print("No match found")
                 continue
+
+        server_soc.close()
+        print("disconnected")
 
 
 if __name__ == "__main__":

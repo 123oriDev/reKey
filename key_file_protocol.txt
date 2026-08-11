@@ -1,0 +1,8 @@
+
+press:"space"
+release:"space"
+key:"g"
+write:"youtube.com"
+
+example:
+    

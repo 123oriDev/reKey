@@ -34,7 +34,7 @@ server -> client:
     codes:
         100 - okay:
             example:
-                code:"100",data:""
+                code:"100",data:"success"
         
         300 - file keys:
             example:

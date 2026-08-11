@@ -2,7 +2,6 @@ import os
 import platform
 import sys
 from threading import Event
-from typing import Set
 
 import keyboard
 
@@ -33,11 +32,12 @@ class BaseKeyHandler:
 
 # --- 2. MODULAR: The Interceptor ---
 class KeyboardInterceptor:
-    """Hooks and suppresses global keyboard events, delegating actions to a Handler object."""
+    """Hooks global keyboard events, delegating actions to a Handler object with optional local suppression."""
 
-    def __init__(self, handler: BaseKeyHandler, exit_combo: Set[str]):
+    def __init__(self, handler: BaseKeyHandler, exit_combo: set[str], suppress: bool = True):
         self.handler = handler
         self.exit_combo = {k.lower() for k in exit_combo}
+        self.suppress = suppress  # Controls whether keys type on the local machine
         self._pressed_keys = set()
         self._stop_signal = Event()
 
@@ -49,7 +49,6 @@ class KeyboardInterceptor:
                 self._pressed_keys.add(key_name)
                 self.handler.on_press(key_name)
 
-            # MODULAR: Dynamically checks if all keys in the exit_combo are currently held
             if self.exit_combo.issubset(self._pressed_keys):
                 self._stop_signal.set()
                 return
@@ -67,11 +66,17 @@ class KeyboardInterceptor:
 
     def start(self) -> None:
         """Start global hook and block execution until exit combination is pressed."""
-        keyboard.hook(self._on_key_event, suppress=True)
+        # Dynamic suppression: True = block local typing, False = allow local typing
+        keyboard.hook(self._on_key_event, suppress=self.suppress)
 
         combo_str = " + ".join(k.upper() for k in self.exit_combo)
         print(f"Platform: {platform.system()}")
-        print("UNIVERSAL BLOCKER ACTIVE: All keyboard inputs suppressed.")
+        
+        if self.suppress:
+            print("UNIVERSAL BLOCKER ACTIVE: All local keyboard inputs suppressed.")
+        else:
+            print("PASSTHROUGH MODE ACTIVE: Keystrokes will type locally and be transmitted.")
+            
         print(f"Press '{combo_str}' to exit and restore control.\n")
 
         try:
@@ -79,8 +84,7 @@ class KeyboardInterceptor:
         finally:
             self._flush_remaining_releases()
             keyboard.unhook_all()
-            print(f"\n[EXIT] '{combo_str}' detected. Keyboard restored.")
-
+            print(f"\n[EXIT] '{combo_str}' detected. Keyboard hook removed.")
 
 # --- 3. IMPLEMENTATION: Your Custom Logic ---
 class MyCustomHandler(BaseKeyHandler):
@@ -116,7 +120,8 @@ def main() -> None:
     # 2. Pass the handler and a custom exit shortcut to the interceptor
     interceptor = KeyboardInterceptor(
         handler=my_handler,
-        exit_combo={"ctrl", "shift", "alt", "q"}
+        exit_combo={"ctrl", "shift", "alt", "q"},
+        suppress= False
     )
 
     interceptor.start()

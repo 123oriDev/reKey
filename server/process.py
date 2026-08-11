@@ -49,7 +49,7 @@ def process_message(message):
         code_data = util.decode_message(message)
 
     except Exception as e:
-        return util.generate_message(900, e)
+        return util.generate_message(500, e)
 
     print(code_data)
 
