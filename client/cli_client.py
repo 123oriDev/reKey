@@ -1,4 +1,5 @@
 import socket
+import time
 
 import cli_client_util
 import run_key_file
@@ -145,18 +146,20 @@ class SocketFileKeyHandler(run_key_file.FileKeyHandler):
             client_message = util.generate_message(200, key)
             send_message(client_message, self._socket)
 
-        if head == "release":
+        elif head == "release":
             client_message = util.generate_message(250, key)
             send_message(client_message, self._socket)
 
-        if head == "key":
+        elif head == "key":
             client_message = util.generate_message(100, key)
             send_message(client_message, self._socket)
 
-        if head == "write":
+        elif head == "write":
             client_message = util.generate_message(150, key)
             send_message(client_message, self._socket)
-        
+
+        elif head == "sleep":
+            time.sleep(float(key))
 
     def no_header(self, line):
         print(f"{line} - invalid")

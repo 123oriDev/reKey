@@ -17,7 +17,7 @@ class FileKeyReader:
 
     def process_line(self, line):
         try:
-            split_line = line.split(":")
+            split_line = line.split(":", 1)
             split_line[1] = split_line[1][1:-1]
 
             self.handler.header(split_line[0], split_line[1])
