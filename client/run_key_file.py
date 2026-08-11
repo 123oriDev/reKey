@@ -18,7 +18,7 @@ class FileKeyReader:
     def process_line(self, line):
         try:
             split_line = line.split(":")
-            split_line[1] = split_line[1][1:-2]
+            split_line[1] = split_line[1][1:-1]
 
             self.handler.header(split_line[0], split_line[1])
         except Exception:
@@ -27,7 +27,7 @@ class FileKeyReader:
     def start(self) -> None:
         with open(self._path, "r") as file:
             for line in file:
-                self.process_line(line)
+                self.process_line(line.strip())
 
 
 class PrintFileKeyHandler(FileKeyHandler):
@@ -39,10 +39,9 @@ class PrintFileKeyHandler(FileKeyHandler):
 
 
 def main():
-    line = 'press:"space"'
-
+    FileKey = PrintFileKeyHandler()
     FileReader = FileKeyReader(
-        handler=PrintFileKeyHandler, path=r"C:\Users\Ori\Documents\apps\reKey\test.txt"
+        handler=FileKey, path=r"C:\Users\Ori\Documents\apps\reKey\test.txt"
     )
     FileReader.start()
 
