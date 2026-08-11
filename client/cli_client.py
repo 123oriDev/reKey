@@ -1,6 +1,7 @@
 import socket
 
 import cli_client_util
+import run_key_file
 import util
 
 SERVER_IP = ""
@@ -58,7 +59,8 @@ def menu():
     """
     print("[0] Quit")
     print("[1] Control the server")
-    print("[2] Create a key presses file")
+    print("[2] Run a key presses file")
+    print("[3] Create a key presses file")
 
 
 def send_message(client_message, server_soc):
@@ -133,6 +135,33 @@ def create_key_file():
     with open(path, "w") as file_write:
         file_write.writelines(file_read)
 
+
+class SocketFileKeyHandler(run_key_file.FileKeyHandler):
+    def __init__(self, socket):
+        self._socket = socket
+
+    def header(self, head, key):
+        if head == "press":
+            client_message = util.generate_message(200, key)
+            send_message(client_message, self._socket)
+
+        if head == "release":
+            client_message = util.generate_message(250, key)
+            send_message(client_message, self._socket)
+
+        if head == "key":
+            client_message = util.generate_message(100, key)
+            send_message(client_message, self._socket)
+
+        if head == "write":
+            client_message = util.generate_message(150, key)
+            send_message(client_message, self._socket)
+        
+
+    def no_header(self, line):
+        print(f"{line} - invalid")
+
+
 def main():
     cli_client_util.check_privileges()
 
@@ -170,6 +199,19 @@ def main():
 
             elif choice == "1":
                 record_Keys(server_soc)
+
+            elif choice == "2":
+                key_file_path = input("Enter a path to the key file: ")
+                handler = SocketFileKeyHandler(
+                    socket = server_soc
+                )
+                FileReader = run_key_file.FileKeyReader(
+                    handler= handler,
+                    path= key_file_path
+                )
+
+                FileReader.start()
+
             else:
                 print("No match found")
                 continue

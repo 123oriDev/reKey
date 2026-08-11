@@ -8,3 +8,5 @@ press:"l"
 release:"l"
 press:"o"
 release:"o"
+write:"hwee"
+dadqw
