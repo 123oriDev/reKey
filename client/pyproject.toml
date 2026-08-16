@@ -1,0 +1,14 @@
+[build-system]
+requires = ["keyboard"]
+
+[project]
+name = "rekey"             # Lowercase, no spaces (used for standard packaging)
+version = "1.0.0"
+
+[tool.flet]
+product = "ReKey"          # Display name shown under the app icon on Android
+icon = "assets/icon.png"
+
+[tool.flet.app]
+path = "."                 # Current directory (client/)
+module = "mobile.py"       # Tells Flet to use mobile.py as entry point

@@ -18,6 +18,7 @@ def main(page: ft.Page):
     page.session.store.set("shift", False)
     page.session.store.set("fn", False)
 
+    key_blacklist = ['Fn']
     dynamic_keys = []
     caps_container_ref = [None]
     shift_container_refs = []
@@ -25,6 +26,7 @@ def main(page: ft.Page):
 
     # Map of standard keys to their Shifted counterparts
     SHIFT_MAP = {
+        "`": "~",
         "1": "!",
         "2": "@",
         "3": "#",
@@ -48,24 +50,25 @@ def main(page: ft.Page):
 
     # Map of number row keys to their Function counterparts
     FN_MAP = {
-        "1": "F1",
-        "2": "F2",
-        "3": "F3",
-        "4": "F4",
-        "5": "F5",
-        "6": "F6",
-        "7": "F7",
-        "8": "F8",
-        "9": "F9",
-        "0": "F10",
-        "-": "F11",
-        "=": "F12",
+        "`": "esc",
+        "1": "f1",
+        "2": "f2",
+        "3": "f3",
+        "4": "f4",
+        "5": "f5",
+        "6": "f6",
+        "7": "f7",
+        "8": "f8",
+        "9": "f9",
+        "0": "f10",
+        "-": "f11",
+        "=": "f12",
     }
 
     # 1. On-Screen Display
     status_text = ft.Text(
         "Press any key...",
-        size=24,
+        size=44,
         weight="bold",
         color="#38BDF8",
         text_align="center",
@@ -132,13 +135,21 @@ def main(page: ft.Page):
                 fn_container_ref[0].bgcolor = ACTION_COLOR
             update_keyboard_labels()
 
-        msg = f"Key PRESSED:  {key}"
-        status_text.value = msg
+        if key not in key_blacklist:
+            is_fn = page.session.store.get("fn")
+            active_key = FN_MAP[key] if (is_fn and key in FN_MAP) else key
+
+            msg = f"Key PRESSED:  {active_key}"
+            status_text.value = msg
+            print(msg)
+
         page.update()
-        print(msg)
 
     def button_up(e):
         key = e.control.data
+
+        is_fn = page.session.store.get("fn")
+        active_key = FN_MAP[key] if (is_fn and key in FN_MAP) else key
 
         if key == "shift":
             page.session.store.set("shift", False)
@@ -152,10 +163,12 @@ def main(page: ft.Page):
                 fn_container_ref[0].bgcolor = ACCENT_COLOR
             update_keyboard_labels()
 
-        msg = f"Key RELEASED: {key}"
-        status_text.value = msg
+        if key not in key_blacklist:
+            msg = f"Key RELEASED: {active_key}"
+            status_text.value = msg
+            print(msg)
+
         page.update()
-        print(msg)
 
     # 3. Key Builder Function
     def create_key(label, key_data, width=50, height=50, bg_color="#1E293B"):
@@ -200,6 +213,7 @@ def main(page: ft.Page):
 
     keyboard_rows = [
         [
+            ("`", "`"),
             ("1", "1"),
             ("2", "2"),
             ("3", "3"),
@@ -260,10 +274,10 @@ def main(page: ft.Page):
         ],
         [
             ("Ctrl", "ctrl", 65, ACCENT_COLOR),
-            ("Win", "win", 65, ACCENT_COLOR),
-            ("Alt", "alt", 65, ACCENT_COLOR),
+            ("win", "left windows", 65, ACCENT_COLOR),
+            ("alt", "alt", 65, ACCENT_COLOR),
             ("Space", "space", 209, ACTION_COLOR),
-            ("Alt", "alt", 65, ACCENT_COLOR),
+            ("alt", "right alt", 65, ACCENT_COLOR),
             ("Fn", "Fn", 65, ACCENT_COLOR),
             ("←", "left", 50, ACCENT_COLOR),
             ("↑", "up", 50, ACCENT_COLOR),
@@ -310,7 +324,7 @@ def main(page: ft.Page):
         if new_val:
             server_ip = new_val
             ip_text.value = server_ip
-        
+
         ip_input.visible = False
         ip_display.visible = True
         page.update()
@@ -325,7 +339,7 @@ def main(page: ft.Page):
 
     ip_input = ft.TextField(
         value=server_ip,
-        width=90,
+        width=120,
         height=45,
         text_size=24,
         content_padding=6,
