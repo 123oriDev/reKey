@@ -1,0 +1,14 @@
+# Virtual environments
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Flet build artifacts (if you use flet pack/build)
+build/
+dist/
+
+# Environment variables
+.env
