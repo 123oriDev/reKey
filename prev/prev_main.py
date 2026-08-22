@@ -245,7 +245,7 @@ def main(page: ft.Page):
             ("\\", "\\"),
         ],
         [
-            ("Caps", "capslock", 75, ACCENT_COLOR),
+            ("Caps", "caps lock", 75, ACCENT_COLOR),
             ("A", "a"),
             ("S", "s"),
             ("D", "d"),
@@ -313,6 +313,8 @@ def main(page: ft.Page):
     )
 
     def start_editing_ip(e):
+        ip_input.value = server_ip
+        update_ip_input_width()  # Adjust width to match the text before showing
         ip_display.visible = False
         ip_input.visible = True
         ip_input.focus()
@@ -336,15 +338,23 @@ def main(page: ft.Page):
         border_radius=6,
         ink=True,
     )
+    # Helper to calculate dynamic width based on text length
+    def update_ip_input_width(e=None):
+        char_count = max(len(ip_input.value), 1)
+        ip_input.width = max(115, char_count * 15)
+        page.update()
 
     ip_input = ft.TextField(
         value=server_ip,
-        width=120,
+        width=115,
         height=45,
         text_size=24,
-        content_padding=6,
+        text_style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+        content_padding=ft.Padding(8, 0, 8, 0),  # Corrected Flet Padding syntax
         border_radius=6,
-        border=page.bgcolor,
+        border=ft.InputBorder.OUTLINE,
+        focused_border_color="#38BDF8",
+        on_change=update_ip_input_width,
         on_submit=finish_editing_ip,
         on_blur=finish_editing_ip,
         visible=False,
