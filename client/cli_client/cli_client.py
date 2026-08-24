@@ -1,9 +1,9 @@
 import socket
 import time
 
-import client.cli_client.cli_client_util as cli_client_util
-import client.cli_client.run_key_file as run_key_file
-import client.cli_client.util as util
+import cli_client_util
+import run_key_file
+import util
 
 SERVER_IP = ""
 SERVER_PORT = 849  # ascii sum keyboard
