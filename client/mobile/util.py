@@ -21,6 +21,21 @@ def generate_message(code, data):
     """
     return f'code:"{code}",data:"{data}"'
 
+def send_message(client_message, server_soc):
+    """
+    sends a message to the server (send and receive)
+    :param client_message: the message to send
+    :param server_soc: the socket to the server
+    :type code: string
+    :type server_soc: socket
+    :return: None
+    :rtype: None
+    """
+    server_soc.sendall(client_message.encode())
+    server_message = server_soc.recv(512).decode()
+    server_message = decode_message(server_message)
+    print(server_message[1])
+
 
 def decode_message(message):
     """

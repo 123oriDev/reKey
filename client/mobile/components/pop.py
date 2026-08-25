@@ -1,37 +1,37 @@
 import flet as ft
-import text_editor
+
+
+import flet as ft
 
 
 class PopContinue(ft.Container):
-    """Secondary detail/settings panel template.
-
-    Header stays pinned at the top, while body content alignment can be customized.
-    """
 
     def __init__(
         self,
         top_text: str = "Details",
-        components: list = [],
+        components: list = None,
         icon_name_exit: ft.IconData = ft.Icons.CLOSE,
         panel_color="surfaceContainerHigh",
         left_offset=280,
         animation_duration=300,
         animation_curve=ft.AnimationCurve.EASE_OUT,
-        main_alignment: ft.MainAxisAlignment = ft.MainAxisAlignment.START,
-        cross_alignment: ft.CrossAxisAlignment = ft.CrossAxisAlignment.START,
+        main_alignment=ft.MainAxisAlignment.START,
+        cross_alignment=ft.CrossAxisAlignment.START,
         spacing: int = 15,
         padding: int = 20,
     ):
+
         self.components = components or []
         self.top_text = top_text
         self.icon_name_exit = icon_name_exit
         self.is_open = False
 
-        # --------------------------------
-        # Header (Pinned at Top)
-        # --------------------------------
+        # ====================================================
+        # HEADER
+        # ====================================================
+
         self.title_text = ft.Text(
-            self.top_text,
+            top_text,
             size=20,
             weight=ft.FontWeight.BOLD,
         )
@@ -39,92 +39,114 @@ class PopContinue(ft.Container):
         self.header_row = ft.Row(
             controls=[
                 self.title_text,
+
                 ft.IconButton(
-                    icon=self.icon_name_exit,
-                    on_click=lambda e: self.close_panel(),
-                    tooltip="Close Panel",
+                    icon=icon_name_exit,
+                    on_click=lambda e:
+                        self.close_panel(),
+                    tooltip="Close",
                 ),
             ],
+
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
-        self.header_section = ft.Column(
-            controls=[
-                self.header_row,
-                ft.Divider(),
-            ],
-            spacing=5,
-        )
+        # ====================================================
+        # BODY
+        # ====================================================
 
-        # --------------------------------
-        # Body (Customizable Alignment)
-        # --------------------------------
         self.body_section = ft.Column(
             controls=self.components,
             spacing=spacing,
+
             alignment=main_alignment,
+
             horizontal_alignment=cross_alignment,
+
             scroll=ft.ScrollMode.AUTO,
+
             expand=True,
         )
 
-        # Main Layout
+        # ====================================================
+        # PANEL
+        # ====================================================
+
         super().__init__(
             top=0,
             bottom=0,
             left=left_offset,
             right=0,
+
             bgcolor=panel_color,
+
             padding=padding,
+
             offset=ft.Offset(1, 0),
+
             animate_offset=ft.Animation(
                 animation_duration,
                 animation_curve,
             ),
+
             content=ft.Column(
                 controls=[
-                    self.header_section,
+                    self.header_row,
                     self.body_section,
                 ],
+
                 expand=True,
-                spacing=10,
+
+                spacing=15,
             ),
         )
 
+    # ========================================================
+    # OPEN
+    # ========================================================
+
     def open_panel(
         self,
-        top_text: str = "",
-        components: list = [],
-        main_alignment: ft.MainAxisAlignment = None,
-        cross_alignment: ft.CrossAxisAlignment = None,
+        top_text: str = None,
+        components: list = None,
+        main_alignment=None,
+        cross_alignment=None,
     ):
-        """Open panel and update title, body controls, or body alignment dynamically."""
+
         if top_text is not None:
             self.title_text.value = top_text
 
-        # Update body alignment without affecting header
         if main_alignment is not None:
             self.body_section.alignment = main_alignment
 
         if cross_alignment is not None:
-            self.body_section.horizontal_alignment = cross_alignment
+            self.body_section.horizontal_alignment = (
+                cross_alignment
+            )
 
-        # Update body components
         if components is not None:
             self.components = components
-            self.body_section.controls = self.components
+            self.body_section.controls = components
 
         self.is_open = True
         self.offset = ft.Offset(0, 0)
+
         self.update()
 
+    # ========================================================
+    # CLOSE
+    # ========================================================
+
     def close_panel(self):
+
         self.is_open = False
         self.offset = ft.Offset(1, 0)
+
         self.update()
 
 
 class PopMenu(ft.Container):
+
     def __init__(
         self,
         components: list,
@@ -136,9 +158,14 @@ class PopMenu(ft.Container):
         animation_duration=300,
         animation_curve=ft.AnimationCurve.EASE_OUT,
     ):
+
         self.components = components
         self.pop_continue = pop_continue
         self.pop_menu_open = False
+
+        # ====================================================
+        # OPEN BUTTON
+        # ====================================================
 
         self.button = ft.IconButton(
             icon=icon_name_open,
@@ -146,46 +173,65 @@ class PopMenu(ft.Container):
             tooltip="Open Menu",
         )
 
-        panel_controls = [
-            ft.Row(
-                controls=[
-                    ft.Text(
-                        top_text,
-                        size=20,
-                        weight=ft.FontWeight.BOLD,
-                    ),
-                    ft.IconButton(
-                        icon=icon_name_exit,
-                        on_click=self.toggle_pop_menu,
-                        tooltip="Close Menu",
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            ),
-            ft.Divider(),
-        ]
+        # ====================================================
+        # HEADER
+        # ====================================================
 
-        panel_controls.extend(components)
+        header = ft.Row(
+            controls=[
+                ft.Text(
+                    top_text,
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                ),
+
+                ft.IconButton(
+                    icon=icon_name_exit,
+                    on_click=self.toggle_pop_menu,
+                    tooltip="Close",
+                ),
+            ],
+
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+        # ====================================================
+        # MENU
+        # ====================================================
 
         self.pop_menu_panel = ft.Container(
             width=280,
+
             top=0,
             bottom=0,
             left=0,
+
             bgcolor=panel_color,
+
             shadow=ft.BoxShadow(
                 blur_radius=15,
                 color="black54",
             ),
+
             offset=ft.Offset(-1, 0),
+
             animate_offset=ft.Animation(
                 animation_duration,
                 animation_curve,
             ),
+
             padding=20,
+
             content=ft.Column(
-                controls=panel_controls,
-                spacing=15,
+                controls=[
+                    header,
+                    ft.Column(
+                        controls=components,
+                        spacing=4,
+                    ),
+                ],
+
+                spacing=20,
             ),
         )
 
@@ -193,27 +239,52 @@ class PopMenu(ft.Container):
             content=self.button,
         )
 
+    # ========================================================
+    # MOUNT
+    # ========================================================
+
     def did_mount(self):
-        if self.pop_continue and self.pop_continue not in self.page.overlay:
-            self.page.overlay.append(self.pop_continue)
+
+        if (
+            self.pop_continue
+            and self.pop_continue not in self.page.overlay
+        ):
+            self.page.overlay.append(
+                self.pop_continue
+            )
 
         if self.pop_menu_panel not in self.page.overlay:
-            self.page.overlay.append(self.pop_menu_panel)
+            self.page.overlay.append(
+                self.pop_menu_panel
+            )
 
         self.page.update()
 
+    # ========================================================
+    # TOGGLE
+    # ========================================================
+
     def toggle_pop_menu(self, e=None):
+
         self.pop_menu_open = not self.pop_menu_open
+
         self.pop_menu_panel.offset = (
-            ft.Offset(0, 0) if self.pop_menu_open else ft.Offset(-1, 0)
+            ft.Offset(0, 0)
+            if self.pop_menu_open
+            else ft.Offset(-1, 0)
         )
+
         self.pop_menu_panel.update()
 
-        if not self.pop_menu_open and self.pop_continue:
+        if (
+            not self.pop_menu_open
+            and self.pop_continue
+        ):
             self.pop_continue.close_panel()
 
-
 def main(page: ft.Page):
+    import text_editor
+
     page.title = "Settings Menu"
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = 0

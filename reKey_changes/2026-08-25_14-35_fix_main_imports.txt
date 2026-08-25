@@ -1,0 +1,6 @@
+Task: Fix import errors in client/mobile/main.py
+Date/Time: 2026-08-25 14:35
+
+Details:
+- Added dynamic sys.path resolution using pathlib at the top of client/mobile/main.py.
+- Included the current script directory, client directory, and project root to sys.path so modules like `util`, `components`, and `file_handling` can be resolved consistently across different working directories.

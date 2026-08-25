@@ -143,7 +143,7 @@ class VirtualKeyboard(ft.Column):
 
         if key in ["capslock", "caps lock"]:
             self.toggle_caps_lock()
-            return
+            # Do NOT return early; let it fall through to send the press event
 
         elif key == "shift":
             self.is_shift = True
@@ -185,6 +185,7 @@ class VirtualKeyboard(ft.Column):
                 self.fn_container.bgcolor = ACCENT_COLOR
             self.update_keyboard_labels()
 
+        # Ensure capslock isn't accidentally blacklisted
         if key not in self.key_blacklist:
             msg = f"Key RELEASED: {active_key}"
 
