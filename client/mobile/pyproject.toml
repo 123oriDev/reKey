@@ -12,3 +12,6 @@ icon = "assets/icon.png"
 [tool.flet.app]
 path = "."                 # Current directory (client/)
 module = "main.py"       # Tells Flet to use main.py as entry point
+
+[tool.flet.template]
+url = "../../flet-build-template"
