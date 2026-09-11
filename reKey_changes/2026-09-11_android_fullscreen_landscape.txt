@@ -1,0 +1,23 @@
+Task: Add durable Android immersive fullscreen and landscape-only mode
+Date: 2026-09-11
+
+What changed:
+- Added a repository-local copy of the official Flet 0.86.5 build template.
+- Configured client/mobile/pyproject.toml to use that template for normal Flet builds.
+- Added native Android immersive mode that hides both the status and navigation bars.
+- Allowed Android system bars to appear temporarily when the user swipes from an edge.
+- Reapplied fullscreen when the activity starts, resumes, or regains focus.
+- Locked orientation to sensor landscape, allowing rotation between both horizontal sides while blocking portrait.
+- Added an explicit AndroidX Core 1.16.0 dependency for WindowInsetsControllerCompat.
+
+How it works:
+- MainActivity uses WindowCompat.getInsetsController() to hide WindowInsetsCompat.Type.systemBars().
+- BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE preserves normal Android edge-swipe access to system controls.
+- ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE applies the landscape lock before Flutter starts.
+- The custom template is stored outside the Python app directory so template sources are not packaged into the APK.
+
+Verification:
+- Built successfully from an empty generated build directory using a normal `flet build apk` command.
+- Confirmed the generated activity contains fullscreen, transient-bar, and sensor-landscape behavior.
+- Confirmed the generated Gradle project uses AndroidX Core 1.16.0.
+- Confirmed the APK contains the required `certifi` Python package.
